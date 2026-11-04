@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lego Vault</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lego Vault">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#C91A09">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F1EC;--surface:#FFFFFF;--ink:#1B2A34;--muted:#5E6A72;--line:#DCD8CF;
+  --red:#C91A09;--yellow:#F2CD37;--blue:#0055BF;--green:#237841;
+  --chip-built:#DCEFE2;--chip-built-ink:#1D6337;--chip-pieces:#FBEFC2;--chip-pieces-ink:#6E5300;--chip-missing:#F9DCD8;--chip-missing-ink:#9A1608;
+  --display:"Lilita One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Lexend",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --tabh:64px;color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#161C21;--surface:#222B32;--ink:#EEF1F2;--muted:#9AA6AE;--line:#33404A;
+  --red:#E0352A;--yellow:#F5D24A;--blue:#4C8EE6;--green:#4CAF6E;
+  --chip-built:#1E3A29;--chip-built-ink:#8FD9A8;--chip-pieces:#3E3518;--chip-pieces-ink:#F5D24A;--chip-missing:#45201C;--chip-missing-ink:#FF9C90;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--red)}
+img{max-width:100%}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--red);color:#fff;
+  padding-block:12px 14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.16) 0 7px,rgba(0,0,0,.12) 7.5px 8.5px,transparent 9px);
+  background-size:26px 26px;background-position:6px -8px}
+.hrow{display:flex;align-items:center;gap:10px;max-width:720px;margin:0 auto}
+h1{font-family:var(--display);font-weight:400;font-size:30px;line-height:1;margin:0;letter-spacing:.5px;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+.count{margin-left:auto;background:var(--yellow);color:#1B2A34;font-family:var(--mono);font-weight:700;font-size:13px;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.hbtn{border:2px solid rgba(255,255,255,.7);background:rgba(0,0,0,.15);color:#fff;border-radius:10px;height:36px;padding:0 10px;font-weight:600;font-size:13px;cursor:pointer}
+main{max-width:720px;margin:0 auto;padding-block:16px calc(var(--tabh) + 96px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0 0 6px;text-wrap:balance}
+.lede{color:var(--muted);margin:0 0 16px;max-width:60ch}
+.search{display:flex;gap:8px;margin-bottom:10px}
+.search input{flex:1;min-width:0;height:46px;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:0 14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.fchip{flex:none;border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px;cursor:pointer}
+.row:active{transform:translateY(1px)}
+.thumb{flex:none;width:72px;height:72px;border-radius:10px;object-fit:cover;background:var(--bg)}
+.thumb.ph{display:grid;place-items:center;background:var(--yellow);
+  background-image:radial-gradient(circle,rgba(255,255,255,.35) 0 6px,rgba(0,0,0,.1) 6.5px 7.5px,transparent 8px);background-size:24px 24px}
+.thumb.ph span{font-family:var(--mono);font-weight:700;font-size:11px;color:#1B2A34;background:rgba(255,255,255,.75);padding:2px 5px;border-radius:4px}
+.rinfo{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.rname{font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.rmeta{font-size:13px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.num{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.stars{color:var(--yellow);letter-spacing:1px;font-size:14px}
+.stars .off{color:var(--line)}
+.status{font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.st-built{background:var(--chip-built);color:var(--chip-built-ink)}
+.st-pieces{background:var(--chip-pieces);color:var(--chip-pieces-ink)}
+.st-missing{background:var(--chip-missing);color:var(--chip-missing-ink)}
+.empty{background:var(--surface);border:2px dashed var(--line);border-radius:16px;padding:24px;text-align:center}
+.bigbrick{width:96px;height:56px;margin:12px auto 14px;border-radius:8px;background:var(--red);position:relative}
+.bigbrick::before{content:"";position:absolute;left:10px;right:10px;top:-12px;height:14px;
+  background:radial-gradient(circle at 12px 8px,var(--red) 0 9px,transparent 9.5px) 0 0/26px 16px repeat-x}
+.note{font-size:14px;color:var(--muted)}
+.banner{background:var(--chip-pieces);color:var(--chip-pieces-ink);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px;display:flex;gap:10px;align-items:center}
+.banner span{flex:1;min-width:0}
+.banner button{border:none;background:transparent;font-weight:700;font-size:18px;cursor:pointer;color:inherit}
+.fab{position:fixed;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(var(--tabh) + 18px + env(safe-area-inset-bottom,0px));z-index:6;
+  height:58px;padding:0 22px;border:none;border-radius:16px;background:var(--blue);color:#fff;font-family:var(--display);font-size:20px;
+  box-shadow:0 4px 0 rgba(0,0,0,.25);cursor:pointer;display:flex;align-items:center;gap:8px}
+.fab:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:2px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);display:flex}
+.tab{flex:1;height:var(--tabh);border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer}
+.tab svg{width:26px;height:26px}
+.tab[aria-selected="true"]{color:var(--red)}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h3{font-family:var(--display);font-weight:400;font-size:20px;margin:0 0 6px}
+.card p{margin:0 0 10px}
+.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.bigbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:14px;border:none;font-weight:600;font-size:16px;text-decoration:none;cursor:pointer;padding:10px 14px;text-align:center}
+.b-red{background:var(--red);color:#fff}
+.b-blue{background:var(--blue);color:#fff}
+.b-yellow{background:var(--yellow);color:#1B2A34}
+.b-ghost{background:var(--bg);color:var(--ink);border:2px solid var(--line)}
+.btnrow{display:flex;flex-direction:column;gap:10px}
+.partin{display:flex;gap:8px;margin:10px 0}
+.partin input{flex:1;min-width:0;height:52px;border:2px solid var(--line);border-radius:12px;padding:0 14px;font-family:var(--mono);font-size:20px;background:var(--bg)}
+.results{display:flex;flex-direction:column;gap:10px}
+.hint{font-size:14px;color:var(--muted)}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.sheethead{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--line);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheethead h2{margin:0;font-size:22px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xbtn{background:var(--surface);border:2px solid var(--line);border-radius:10px;height:42px;padding:0 14px;font-weight:600;cursor:pointer}
+.sheetbody{max-width:720px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.hero{width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:var(--surface);border:2px solid var(--line)}
+.hero.ph{display:grid;place-items:center;color:var(--muted)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:14px;margin:0}
+.facts dt{color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+.facts dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+label.f .sub{font-weight:400;color:var(--muted)}
+.inp{height:50px;border:2px solid var(--line);border-radius:12px;padding:0 14px;background:var(--surface);font-size:16px;width:100%}
+.flabel{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 30%;min-height:46px;border:2px solid var(--line);background:var(--surface);border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;padding:4px 8px}
+.seg button[aria-pressed="true"].sb{background:var(--chip-built);color:var(--chip-built-ink);border-color:var(--green)}
+.seg button[aria-pressed="true"].sp{background:var(--chip-pieces);color:var(--chip-pieces-ink);border-color:var(--yellow)}
+.seg button[aria-pressed="true"].sm{background:var(--chip-missing);color:var(--chip-missing-ink);border-color:var(--red)}
+.starpick{display:flex;gap:4px}
+.starpick button{border:none;background:none;font-size:36px;line-height:1;color:var(--line);cursor:pointer;padding:2px}
+.starpick button.on{color:var(--yellow)}
+.photopick{display:flex;gap:12px;align-items:center}
+.photopick img,.photopick .ph{width:96px;height:96px;border-radius:12px;object-fit:cover;flex:none}
+.photopick .ph{background:var(--surface);border:2px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:100px}
+.err{color:var(--chip-missing-ink);background:var(--chip-missing);border-radius:10px;padding:8px 12px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 90px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;max-width:calc(100% - 32px);text-align:center}
+.linkbox{font-family:var(--mono);font-size:13px;background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
+@media (max-width:430px){h1{font-size:24px}.hbtn{padding:0 8px}.count{padding:4px 7px;font-size:12px}.hrow{gap:7px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>Lego Vault</h1>
+    <span class="count" id="count">0 sets</span>
+    <button class="hbtn" id="backupbtn" type="button">Backup</button>
+    <button class="hbtn" id="syncbtn" type="button" hidden>Sign in</button>
+  </div>
+</header>
+
+<main>
+  <section id="view-sets">
+    <div class="banner" id="homenote" hidden><span>Tip: tap <b>Share</b> in Safari, then <b>Add to Home Screen</b>, so Lego Vault becomes an app and your sets stay safe.</span><button type="button" id="homenoteX" aria-label="Hide tip">×</button></div>
+    <div class="banner" id="backupnote" hidden><span id="backupnoteText"></span><button type="button" id="backupnoteGo" aria-label="Back up now">→</button></div>
+    <div class="search"><input id="q" type="search" placeholder="Search by name or number" aria-label="Search sets" autocomplete="off"></div>
+    <div class="chips" id="themechips" role="toolbar" aria-label="Filter by theme"></div>
+    <ul class="list" id="list"></ul>
+    <div class="empty" id="empty" hidden>
+      <div class="bigbrick" aria-hidden="true"></div>
+      <h2>Your vault is empty</h2>
+      <p class="lede" style="margin:0 auto">Tap <b>Add set</b> to put your first LEGO set in. The set number is printed on the box and on the front of the instruction book.</p>
+    </div>
+    <p class="note" id="nomatch" hidden>No sets match that search.</p>
+  </section>
+
+  <section id="view-mystery" hidden>
+    <h2>Mystery Brick</h2>
+    <p class="lede">Found a piece and don't know which set it's from? Let's find out.</p>
+    <div class="card">
+      <h3>Type the part number</h3>
+      <p class="hint">Look closely at the piece, often inside or underneath. Many pieces have a tiny number molded in, like <span class="num">3001</span> or <span class="num">60581</span>. A flashlight helps!</p>
+      <form id="partform" class="partin" autocomplete="off">
+        <input id="partnum" placeholder="3001" aria-label="Part number" autocapitalize="off" spellcheck="false">
+        <button class="bigbtn b-red" style="width:auto;padding:0 20px">Find</button>
+      </form>
+      <div class="results" id="partresults" hidden></div>
+    </div>
+    <div class="card">
+      <h3>No number? Take a picture</h3>
+      <p class="hint">Brickognize is a free website. Put one piece on a plain table, take a photo, and it tells you what the piece is and which sets have it.</p>
+      <a class="bigbtn b-blue" href="https://brickognize.com/" target="_blank" rel="noopener">Open Brickognize</a>
+    </div>
+  </section>
+
+  <section id="view-build" hidden>
+    <h2>Build Ideas</h2>
+    <p class="lede">Got a pile of loose bricks? Scan them with Brickit and it shows you what you can build.</p>
+    <div class="card">
+      <h3>How to scan</h3>
+      <ol class="steps">
+        <li>Dump your loose bricks on a table or the floor.</li>
+        <li>Spread them out in one layer so no brick hides another.</li>
+        <li>Open Brickit, tap <b>Scan</b>, and hold the iPhone about 60 cm (2 feet) above the bricks.</li>
+        <li>Pick an idea and follow the steps. Brickit shows where each brick is in your pile.</li>
+      </ol>
+      <p class="hint" style="margin-top:10px">Works best with lots of bricks (150 or more). It looks at shapes, not colors, so your builds might be rainbow!</p>
+    </div>
+    <a class="bigbtn b-yellow" href="https://apps.apple.com/app/id1477221636" target="_blank" rel="noopener">Get Brickit on the App Store</a>
+    <p class="hint" style="margin-top:12px">Brickit is free. Some extra features cost money, so ask a grown-up before buying anything.</p>
+  </section>
+
+  <section id="view-friends" hidden>
+    <h2>Invite Friends</h2>
+    <p class="lede">Send Lego Vault to your friends so they can catalog their own LEGO. Their sets save on their phones, and nobody can see or change yours.</p>
+    <div class="card">
+      <h3>Send the link</h3>
+      <div class="linkbox" id="applink"></div>
+      <div class="btnrow" style="margin-top:12px">
+        <button class="bigbtn b-red" id="sharebtn" type="button">Share Lego Vault</button>
+        <button class="bigbtn b-ghost" id="copybtn" type="button">Copy link</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Tell your friend</h3>
+      <ol class="steps">
+        <li>Open the link in <b>Safari</b>.</li>
+        <li>Tap <b>Share</b> (the square with the arrow up).</li>
+        <li>Tap <b>Add to Home Screen</b>.</li>
+        <li>Open Lego Vault from the red brick icon and add your sets!</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<button class="fab" id="addbtn" type="button" aria-label="Add a set">
+  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg>Add set
+</button>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab" role="tab" data-view="sets" aria-selected="true">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="10" width="20" height="12" rx="2" fill="currentColor"/><rect x="6" y="6" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="15" y="6" width="5" height="5" rx="1.5" fill="currentColor"/></svg>My Sets</button>
+  <button class="tab" role="tab" data-view="mystery" aria-selected="false">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M16 16l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg>Mystery</button>
+  <button class="tab" role="tab" data-view="build" aria-selected="false">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13 3l2.6 6.2 6.4.5-4.9 4.2 1.5 6.3L13 16.8 7.4 20.2l1.5-6.3L4 9.7l6.4-.5z" fill="currentColor"/></svg>Build Ideas</button>
+  <button class="tab" role="tab" data-view="friends" aria-selected="false">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="9" cy="9" r="4" fill="currentColor"/><circle cx="18" cy="10" r="3.2" fill="currentColor"/><path d="M2 22c0-4.4 3.1-7 7-7s7 2.6 7 7z" fill="currentColor"/><path d="M15.5 15.4c.8-.3 1.6-.4 2.5-.4 3.3 0 6 2.2 6 6.2h-6.6" fill="currentColor"/></svg>Friends</button>
+</nav>
+
+<div class="sheet" id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dtitle">
+  <div class="sheethead"><button class="xbtn" id="dclose" type="button">← Back</button><h2 id="dtitle">Set</h2></div>
+  <div class="sheetbody" id="dbody"></div>
+</div>
+
+<div class="sheet" id="formsheet" hidden role="dialog" aria-modal="true" aria-labelledby="ftitle">
+  <div class="sheethead"><button class="xbtn" id="fclose" type="button">Cancel</button><h2 id="ftitle">Add a set</h2></div>
+  <form class="sheetbody" id="setform" autocomplete="off">
+    <div class="photopick">
+      <div id="fphoto"><div class="ph">No photo yet</div></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+        <label class="bigbtn b-ghost filebtn"><span id="photolabel">📷 Add photo</span>
+          <input type="file" id="fphotoin" accept="image/*" aria-label="Take or choose a photo">
+        </label>
+        <span class="hint">Take a picture or pick one from Photos.</span>
+      </div>
+    </div>
+    <label class="f">Set number <span class="sub">On the box or the instruction book</span>
+      <input class="inp num" id="fnum" inputmode="numeric" placeholder="60337"></label>
+    <label class="f">Set name
+      <input class="inp" id="fname" placeholder="Express Passenger Train"></label>
+    <label class="f">Theme
+      <input class="inp" id="ftheme" list="themelist" placeholder="City"></label>
+    <datalist id="themelist"></datalist>
+    <div class="flabel">Is it built?
+      <div class="seg" id="fstatus">
+        <button type="button" class="sb" data-v="built" aria-pressed="true">Built</button>
+        <button type="button" class="sp" data-v="pieces" aria-pressed="false">In pieces</button>
+        <button type="button" class="sm" data-v="missing" aria-pressed="false">Missing pieces</button>
+      </div>
+    </div>
+    <label class="f">Where is it stored?
+      <input class="inp" id="fwhere" list="wherelist" placeholder="Shelf in my room"></label>
+    <datalist id="wherelist"></datalist>
+    <div class="flabel">How much do you love it?
+      <div class="starpick" id="fstars" role="radiogroup" aria-label="Star rating"></div>
+    </div>
+    <div class="err" id="ferr" hidden></div>
+    <button class="bigbtn b-red" id="fsave" type="submit">Save set</button>
+    <button class="bigbtn b-ghost" id="fdelete" type="button" hidden>Delete this set</button>
+  </form>
+</div>
+
+<div class="sheet" id="backupsheet" hidden role="dialog" aria-modal="true" aria-labelledby="btitle">
+  <div class="sheethead"><button class="xbtn" id="bclose" type="button">← Back</button><h2 id="btitle">Backup</h2></div>
+  <div class="sheetbody">
+    <div class="card" style="margin:0">
+      <h3>Save a backup</h3>
+      <p>Your sets live only on this phone. A backup is a file with all your sets and photos. Save it to <b>iCloud Drive</b> or send it to Dad, so nothing gets lost if the phone breaks.</p>
+      <p class="hint" id="lastbackup"></p>
+      <button class="bigbtn b-red" id="dobackup" type="button">Make a backup file</button>
+    </div>
+    <div class="card" style="margin:0">
+      <h3>Bring back a backup</h3>
+      <p>Got a new phone? Pick your backup file and all your sets come back.</p>
+      <label class="bigbtn b-ghost filebtn">Choose backup file
+        <input type="file" id="restorein" accept=".json,application/json" aria-label="Choose backup file">
+      </label>
+      <div class="err" id="berr" hidden></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="syncsheet" hidden role="dialog" aria-modal="true" aria-labelledby="stitle">
+  <div class="sheethead"><button class="xbtn" id="sclose" type="button">← Back</button><h2 id="stitle">Online vault</h2></div>
+  <div class="sheetbody">
+    <div class="card" style="margin:0" id="signinbox">
+      <h3>Sign in</h3>
+      <p>Sign in to save your sets online. Then your iPhone and iPad show the same sets, and nothing gets lost.</p>
+      <form id="signinform" style="display:flex;flex-direction:column;gap:12px" autocomplete="on">
+        <label class="f">Email<input class="inp" id="semail" type="email" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+        <label class="f">Password<input class="inp" id="spass" type="password" autocomplete="current-password"></label>
+        <div class="err" id="serr" hidden></div>
+        <button class="bigbtn b-red" id="sgo" type="submit">Sign in</button>
+      </form>
+      <p class="hint" style="margin:12px 0 0">No login? Ask Dad. Without signing in, Lego Vault still works and saves on this device only.</p>
+    </div>
+    <div class="card" style="margin:0" id="signedbox" hidden>
+      <h3>☁️ Your vault is online</h3>
+      <p>Signed in as <b id="semailshow"></b>. New sets save online automatically and show up on all your devices.</p>
+      <div id="movebox" hidden style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+        <p class="hint" style="margin:0" id="movetext"></p>
+        <button class="bigbtn b-blue" id="movebtn" type="button">Move them to my online vault</button>
+      </div>
+      <button class="bigbtn b-ghost" id="signout" type="button">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* Firebase settings for the online vault. null = online saving is off. */
+const FIREBASE_CONFIG = null;
+</script>
+<script>
+(function(){
+const THEMES=["Star Wars","City","Technic","Ninjago","Friends","Creator 3-in-1","Harry Potter","Marvel","DC","Minecraft","Speed Champions","Icons","Ideas","Super Mario","Jurassic World","Architecture","Duplo","Classic","Disney","Dreamzzz","Sonic","Monkie Kid","Botanicals","Other"];
+const STATUS={built:["Built","st-built"],pieces:["In pieces","st-pieces"],missing:["Missing pieces","st-missing"]};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cleanNum=n=>String(n||"").trim().replace(/\s+/g,"").replace(/-1$/,"");
+const instrUrl=n=>"https://www.lego.com/service/building-instructions/"+encodeURIComponent(cleanNum(n));
+const bricksetUrl=n=>"https://brickset.com/sets/"+encodeURIComponent(cleanNum(n))+"-1";
+const starStr=n=>{n=+n||0;let s="";for(let i=1;i<=5;i++)s+=i<=n?"★":'<span class="off">★</span>';return s};
+const lsGet=k=>{try{return localStorage.getItem(k)}catch{return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
+const isStandalone=window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
+let sets=[],filter="All",editing=null,pendingPhoto=null,formStatus="built",formStars=0,deleteArm=false;
+
+/* ---------- Storage (IndexedDB on this phone) ---------- */
+let dbp=null;
+function idb(){
+  if(dbp)return dbp;
+  dbp=new Promise((res,rej)=>{
+    const r=indexedDB.open("lego-vault",1);
+    r.onupgradeneeded=()=>{r.result.createObjectStore("sets",{keyPath:"id"})};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+  });
+  return dbp;
+}
+async function tx(mode,fn){
+  const d=await idb();
+  return new Promise((res,rej)=>{
+    const t=d.transaction("sets",mode),st=t.objectStore("sets");let out;
+    const r=fn(st);if(r)r.onsuccess=()=>{out=r.result};
+    t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);
+  });
+}
+const localAll=()=>tx("readonly",st=>st.getAll());
+const localPut=s=>tx("readwrite",st=>st.put(s));
+const localDel=id=>tx("readwrite",st=>st.delete(id));
+
+/* ---------- Online vault (Firebase) ---------- */
+let fb=null,cloudCol=null,unsub=null,cloudReady=false;
+function cloudErr(e){
+  const c=e&&e.code||"";
+  toast(c.includes("permission")?"Online vault said no. Try signing out and in again.":"Couldn't save online. It will try again when there's internet.");
+}
+async function reshrinkDataUrl(url,max){
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+  const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+  const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);return c.toDataURL("image/jpeg",0.75);
+}
+async function fitPhoto(s){
+  if(!s.photo||s.photo.length<700000)return s;
+  let p=s.photo;
+  for(const m of [1000,800,600]){try{p=await reshrinkDataUrl(p,m)}catch{return Object.assign({},s,{photo:null})}if(p.length<700000)break}
+  return Object.assign({},s,{photo:p.length<900000?p:null});
+}
+async function putSet(s){
+  if(cloudCol){const f=await fitPhoto(s);cloudCol.doc(f.id).set(f).catch(cloudErr);return}
+  return localPut(s);
+}
+async function delSet(id){
+  if(cloudCol){cloudCol.doc(id).delete().catch(cloudErr);return}
+  return localDel(id);
+}
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2400)}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+function showView(v){
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v));
+  ["sets","mystery","build","friends"].forEach(x=>$("#view-"+x).hidden=x!==v);
+  $("#addbtn").hidden=v!=="sets";
+  window.scrollTo(0,0);
+}
+
+/* ---------- List ---------- */
+function render(){
+  $("#count").textContent=sets.length+(sets.length===1?" set":" sets");
+  const themes=[...new Set(sets.map(s=>s.theme).filter(Boolean))].sort();
+  if(filter!=="All"&&!themes.includes(filter))filter="All";
+  $("#themechips").innerHTML=themes.length>1?["All",...themes].map(t=>`<button class="fchip" aria-pressed="${t===filter}" data-t="${esc(t)}">${esc(t)}</button>`).join(""):"";
+  const q=$("#q").value.trim().toLowerCase();
+  const shown=sets.filter(s=>(filter==="All"||s.theme===filter)&&(!q||(s.name||"").toLowerCase().includes(q)||String(s.number||"").includes(q)))
+    .sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  $("#empty").hidden=sets.length>0;
+  $("#nomatch").hidden=!(sets.length>0&&shown.length===0);
+  $("#list").innerHTML=shown.map(s=>{
+    const st=STATUS[s.status]||STATUS.built;
+    const th=s.photo?`<img class="thumb" src="${s.photo}" alt="">`:`<div class="thumb ph"><span>${esc(cleanNum(s.number))}</span></div>`;
+    return `<li><button class="row" data-id="${esc(s.id)}">${th}<span class="rinfo">
+      <span class="rname">${esc(s.name)}</span>
+      <span class="rmeta"><span class="num">${esc(cleanNum(s.number))}</span>${s.theme?`<span>${esc(s.theme)}</span>`:""}</span>
+      <span class="rmeta"><span class="status ${st[1]}">${st[0]}</span><span class="stars" aria-label="${+s.stars||0} stars">${starStr(s.stars)}</span></span>
+    </span></button></li>`}).join("");
+  $("#wherelist").innerHTML=[...new Set(sets.map(s=>s.where).filter(Boolean))].map(w=>`<option value="${esc(w)}">`).join("");
+  $("#themelist").innerHTML=[...new Set([...themes,...THEMES])].map(t=>`<option value="${esc(t)}">`).join("");
+  updateBackupNote();
+}
+$("#q").addEventListener("input",render);
+$("#themechips").addEventListener("click",e=>{const b=e.target.closest(".fchip");if(b){filter=b.dataset.t;render()}});
+$("#list").addEventListener("click",e=>{const b=e.target.closest(".row");if(b)openDetail(b.dataset.id)});
+async function refresh(){if(cloudCol)return;const l=(await localAll())||[];if(cloudCol)return;sets=l;render()}
+
+/* ---------- Detail ---------- */
+function openDetail(id){
+  const s=sets.find(x=>x.id===id);if(!s)return;
+  const st=STATUS[s.status]||STATUS.built;
+  $("#dtitle").textContent=s.name;
+  $("#dbody").innerHTML=`
+    ${s.photo?`<img class="hero" src="${s.photo}" alt="Photo of ${esc(s.name)}">`:`<div class="hero ph">No photo yet</div>`}
+    <a class="bigbtn b-red" href="${instrUrl(s.number)}" target="_blank" rel="noopener">📘 Building instructions</a>
+    <dl class="facts">
+      <dt>Number</dt><dd class="num">${esc(cleanNum(s.number))}</dd>
+      <dt>Theme</dt><dd>${esc(s.theme||"—")}</dd>
+      <dt>Status</dt><dd><span class="status ${st[1]}">${st[0]}</span></dd>
+      <dt>Stored</dt><dd>${esc(s.where||"—")}</dd>
+      <dt>Rating</dt><dd class="stars" style="font-size:20px">${starStr(s.stars)}</dd>
+    </dl>
+    <a class="bigbtn b-ghost" href="${bricksetUrl(s.number)}" target="_blank" rel="noopener">See all the set's info on Brickset</a>
+    <button class="bigbtn b-blue" id="dedit" type="button">Edit this set</button>`;
+  $("#detail").hidden=false;$("#detail").scrollTop=0;
+  $("#dedit").onclick=()=>{$("#detail").hidden=true;openForm(s)};
+}
+$("#dclose").onclick=()=>$("#detail").hidden=true;
+
+/* ---------- Form ---------- */
+function setStatus(v){formStatus=v;document.querySelectorAll("#fstatus button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v))}
+document.querySelectorAll("#fstatus button").forEach(b=>b.onclick=()=>setStatus(b.dataset.v));
+function setStars(n){formStars=n;$("#fstars").innerHTML=[1,2,3,4,5].map(i=>`<button type="button" role="radio" aria-checked="${i===n}" aria-label="${i} star${i>1?"s":""}" class="${i<=n?"on":""}" data-n="${i}">★</button>`).join("")}
+$("#fstars").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setStars(+b.dataset.n===formStars?0:+b.dataset.n)});
+function showPhoto(src){$("#fphoto").innerHTML=src?`<img src="${src}" alt="Set photo">`:`<div class="ph">No photo yet</div>`;$("#photolabel").textContent=src?"📷 Change photo":"📷 Add photo"}
+function openForm(s){
+  editing=s||null;pendingPhoto=null;deleteArm=false;
+  $("#ftitle").textContent=s?"Edit set":"Add a set";
+  $("#fnum").value=s?cleanNum(s.number):"";$("#fname").value=s?.name||"";$("#ftheme").value=s?.theme||"";$("#fwhere").value=s?.where||"";
+  setStatus(s?.status||"built");setStars(+(s?.stars)||0);showPhoto(s?.photo||null);
+  $("#ferr").hidden=true;$("#fdelete").hidden=!s;$("#fdelete").textContent="Delete this set";$("#fdelete").className="bigbtn b-ghost";
+  $("#formsheet").hidden=false;$("#formsheet").scrollTop=0;
+}
+$("#addbtn").onclick=()=>openForm(null);
+$("#fclose").onclick=()=>{$("#formsheet").hidden=true;pendingPhoto=null};
+
+async function shrink(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+    const max=1200,sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    return c.toDataURL("image/jpeg",0.8);
+  }finally{URL.revokeObjectURL(url)}
+}
+$("#fphotoin").addEventListener("change",async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  try{pendingPhoto=await shrink(f);showPhoto(pendingPhoto)}
+  catch{const er=$("#ferr");er.textContent="That photo couldn't be opened. Try taking a new one.";er.hidden=false}
+});
+$("#setform").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const er=$("#ferr");er.hidden=true;
+  const number=cleanNum($("#fnum").value),name=$("#fname").value.trim();
+  if(!number||!name){er.textContent="Please fill in the set number and the name.";er.hidden=false;return}
+  const s={id:editing?.id||newId(),number,name,theme:$("#ftheme").value.trim(),status:formStatus,where:$("#fwhere").value.trim(),
+    stars:formStars,photo:pendingPhoto||editing?.photo||null,added:editing?.added||Date.now(),updated:Date.now()};
+  try{
+    await putSet(s);
+    $("#formsheet").hidden=true;pendingPhoto=null;
+    toast(editing?"Set updated":"Added to the vault!");
+    lsSet("lv-changed",String(Date.now()));
+    await refresh();
+  }catch{er.textContent="Couldn't save. The phone might be out of space.";er.hidden=false}
+});
+$("#fdelete").onclick=async()=>{
+  if(!editing)return;
+  if(!deleteArm){deleteArm=true;$("#fdelete").textContent="Tap again to delete for good";$("#fdelete").className="bigbtn b-red";return}
+  await delSet(editing.id);$("#formsheet").hidden=true;toast("Set deleted");await refresh();
+};
+
+/* ---------- Mystery brick ---------- */
+$("#partform").addEventListener("submit",e=>{
+  e.preventDefault();
+  const p=$("#partnum").value.trim().replace(/\s+/g,"");const r=$("#partresults");
+  if(!p){r.hidden=true;return}
+  const ep=encodeURIComponent(p);
+  r.innerHTML=`<p class="hint" style="margin:0">Piece <span class="num">${esc(p)}</span>. Open one of these to see a picture of the piece and every set it comes in:</p>
+    <a class="bigbtn b-red" href="https://rebrickable.com/parts/${ep}/" target="_blank" rel="noopener">See sets with this piece (Rebrickable)</a>
+    <a class="bigbtn b-ghost" href="https://www.bricklink.com/v2/catalog/catalogitem.page?P=${ep}" target="_blank" rel="noopener">Check on BrickLink</a>
+    <p class="hint" style="margin:0">If the picture doesn't match your piece, the number might be different. Try Brickognize below.</p>`;
+  r.hidden=false;
+});
+
+/* ---------- Friends ---------- */
+const appUrl=location.href.split("#")[0].split("?")[0];
+$("#applink").textContent=appUrl;
+$("#sharebtn").onclick=async()=>{
+  const data={title:"Lego Vault",text:"Catalog your LEGO with Lego Vault! Open in Safari, tap Share, then Add to Home Screen.",url:appUrl};
+  if(navigator.share){try{await navigator.share(data)}catch{}}else copyLink();
+};
+async function copyLink(){
+  try{await navigator.clipboard.writeText(appUrl);toast("Link copied!")}
+  catch{const r=document.createRange();r.selectNodeContents($("#applink"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Link selected. Tap Copy.")}
+}
+$("#copybtn").onclick=copyLink;
+
+/* ---------- Backup ---------- */
+function daysSince(t){return t?Math.floor((Date.now()-+t)/86400000):null}
+function updateBackupNote(){
+  const last=lsGet("lv-backup"),changed=lsGet("lv-changed");
+  const need=!cloudCol&&sets.length>0&&(!last||(changed&&+changed>+last&&daysSince(last)>=7)||(!last&&sets.length>=3));
+  $("#backupnote").hidden=!need;
+  $("#backupnoteText").textContent=last?`Last backup was ${daysSince(last)} days ago. Time for a new one!`:"You haven't made a backup yet. Tap here to keep your sets safe.";
+  $("#lastbackup").textContent=last?`Last backup: ${new Date(+last).toLocaleDateString()}`:"No backup yet.";
+}
+$("#backupnoteGo").onclick=()=>openBackup();
+$("#backupbtn").onclick=()=>openBackup();
+function openBackup(){$("#berr").hidden=true;updateBackupNote();$("#backupsheet").hidden=false}
+$("#bclose").onclick=()=>$("#backupsheet").hidden=true;
+$("#dobackup").onclick=async()=>{
+  const all=cloudCol?sets.slice():((await localAll())||[]);
+  const json=JSON.stringify({app:"lego-vault",version:1,saved:new Date().toISOString(),sets:all});
+  const name="lego-vault-backup-"+new Date().toISOString().slice(0,10)+".json";
+  const file=new File([json],name,{type:"application/json"});
+  let done=false;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"Lego Vault backup"});done=true}catch(e){if(e&&e.name==="AbortError")return}
+  }
+  if(!done){
+    const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+  }
+  lsSet("lv-backup",String(Date.now()));updateBackupNote();toast("Backup made! Save it somewhere safe.");
+};
+$("#restorein").addEventListener("change",async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  const er=$("#berr");er.hidden=true;
+  try{
+    const data=JSON.parse(await f.text());
+    if(!data||data.app!=="lego-vault"||!Array.isArray(data.sets))throw new Error("bad");
+    let n=0;for(const s of data.sets){if(s&&s.id&&s.name){await putSet(s);n++}}
+    await refresh();$("#backupsheet").hidden=true;toast(n+" sets brought back!");
+  }catch{er.textContent="That file isn't a Lego Vault backup. Pick the file that starts with lego-vault-backup.";er.hidden=false}
+});
+
+/* ---------- Sign in / online sync ---------- */
+function openSync(){$("#serr").hidden=true;updateMoveBox();$("#syncsheet").hidden=false}
+$("#syncbtn").onclick=openSync;
+$("#sclose").onclick=()=>$("#syncsheet").hidden=true;
+async function updateMoveBox(){
+  if(!cloudCol){$("#movebox").hidden=true;return}
+  let local=[];try{local=(await localAll())||[]}catch{}
+  $("#movebox").hidden=local.length===0;
+  $("#movetext").textContent=`This device still has ${local.length} set${local.length===1?"":"s"} saved only here.`;
+}
+$("#movebtn").onclick=async()=>{
+  const b=$("#movebtn");b.disabled=true;b.textContent="Moving…";
+  let n=0;
+  try{
+    const local=(await localAll())||[];
+    for(const s of local){const f=await fitPhoto(s);await cloudCol.doc(f.id).set(f);await localDel(s.id);n++}
+    toast(n+" sets moved online!");
+  }catch{toast("Moved "+n+". Check the internet and tap again for the rest.")}
+  b.disabled=false;b.textContent="Move them to my online vault";updateMoveBox();
+};
+$("#signinform").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const er=$("#serr");er.hidden=true;
+  const email=$("#semail").value.trim(),pw=$("#spass").value;
+  if(!email||!pw){er.textContent="Type the email and the password.";er.hidden=false;return}
+  const b=$("#sgo");b.disabled=true;b.textContent="Signing in…";
+  try{await fb.auth().signInWithEmailAndPassword(email,pw);$("#spass").value=""}
+  catch(x){
+    const c=x&&x.code||"";
+    er.textContent=c.includes("network")?"No internet. Connect to Wi-Fi and try again.":c.includes("too-many")?"Too many tries. Wait a few minutes, then try again.":"That email or password isn't right. Check with Dad.";
+    er.hidden=false;
+  }finally{b.disabled=false;b.textContent="Sign in"}
+});
+$("#signout").onclick=()=>{fb.auth().signOut();$("#syncsheet").hidden=true;toast("Signed out")};
+function setUser(u){
+  if(unsub){unsub();unsub=null}
+  if(u){
+    cloudCol=fb.firestore().collection("users").doc(u.uid).collection("sets");
+    $("#syncbtn").textContent="☁️";$("#syncbtn").setAttribute("aria-label","Online vault: signed in");
+    $("#semailshow").textContent=u.email||"";
+    $("#signinbox").hidden=true;$("#signedbox").hidden=false;
+    unsub=cloudCol.onSnapshot(snap=>{sets=snap.docs.map(d=>Object.assign({},d.data(),{id:d.id}));render()},
+      e=>{cloudErr(e)});
+    updateMoveBox();
+  }else{
+    cloudCol=null;
+    $("#syncbtn").textContent="Sign in";$("#syncbtn").setAttribute("aria-label","Sign in to the online vault");
+    $("#signinbox").hidden=false;$("#signedbox").hidden=true;
+    refresh();
+  }
+}
+function startCloud(){
+  if(!FIREBASE_CONFIG||!window.firebase)return;
+  try{
+    fb=firebase;fb.initializeApp(FIREBASE_CONFIG);
+    fb.firestore().enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    $("#syncbtn").hidden=false;
+    fb.auth().onAuthStateChanged(setUser);
+  }catch{}
+}
+
+/* ---------- Start ---------- */
+startCloud();
+if(!isStandalone&&lsGet("lv-hidetip")!=="1")$("#homenote").hidden=false;
+$("#homenoteX").onclick=()=>{$("#homenote").hidden=true;lsSet("lv-hidetip","1")};
+if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
+refresh().catch(()=>{const n=$("#homenote");n.querySelector("span").textContent="Lego Vault can't save on this browser. Open it in Safari (not a private tab).";n.hidden=false});
+})();
+</script>
+</body>
+</html>
