@@ -142,6 +142,18 @@ label.f .sub{font-weight:400;color:var(--muted)}
 .dupbox{background:var(--chip-pieces);color:var(--chip-pieces-ink);border:2px solid var(--yellow);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .dupbox ul{margin:0;padding-left:20px;font-size:15px}
 .dupbtns{display:flex;flex-direction:column;gap:8px}
+#detail{z-index:22}
+.frcode{font-family:var(--mono);font-weight:700;font-size:34px;letter-spacing:.12em;text-align:center;background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:12px;margin:6px 0 10px;user-select:all;-webkit-user-select:all}
+.frhead{font-family:var(--display);font-weight:400;font-size:20px;margin:6px 0 10px}
+.frow{display:flex;gap:12px;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+.frow .av{flex:none;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-size:22px;color:#fff;background:var(--blue)}
+.frow .fi{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.frow .fn{font-weight:600;overflow-wrap:anywhere}
+.frow .fs{font-size:13px;color:var(--muted)}
+.frow .fs.ok{color:var(--green);font-weight:600}
+.frow .open{flex:none;border:none;background:var(--blue);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+.frow .open:disabled{background:var(--line);color:var(--muted);cursor:default}
+.frow .rm{border:none;background:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;padding:0;align-self:flex-start}
 .err{color:var(--chip-missing-ink);background:var(--chip-missing);border-radius:10px;padding:8px 12px;font-size:14px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 90px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;max-width:calc(100% - 32px);text-align:center}
 .linkbox{font-family:var(--mono);font-size:13px;background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
@@ -211,8 +223,49 @@ label.f .sub{font-weight:400;color:var(--muted)}
   </section>
 
   <section id="view-friends" hidden>
-    <h2>Invite Friends</h2>
-    <p class="lede">Send Lego Vault to your friends so they can catalog their own LEGO. Their sets save on their phones, and nobody can see or change yours.</p>
+    <h2>Friends</h2>
+    <p class="lede">See your friends' sets, and let them see yours. You can only look at a friend's sets. Only they can change them.</p>
+
+    <div class="card" id="fr-signedout">
+      <h3>Sign in to share sets</h3>
+      <p>To see your friends' sets, you and your friends each need a Lego Vault account.</p>
+      <button class="bigbtn b-red" id="fr-signin" type="button">Sign in or make an account</button>
+    </div>
+
+    <div class="card" id="fr-noname" hidden>
+      <h3>Pick your friend name</h3>
+      <p>This is the name your friends see. Use your first name or a nickname, not your full name.</p>
+      <form id="fr-nameform" class="partin" autocomplete="off">
+        <input id="fr-name" class="inp" maxlength="20" placeholder="Shachar" aria-label="Friend name" style="font-family:var(--body);font-size:17px">
+        <button class="bigbtn b-red" style="width:auto;padding:0 20px">Save</button>
+      </form>
+      <div class="err" id="fr-nameerr" hidden></div>
+    </div>
+
+    <div id="fr-ready" hidden>
+      <div class="card">
+        <h3>Your friend code</h3>
+        <div class="frcode" id="fr-code">———</div>
+        <p class="hint">Give this code to a friend. When you both add each other's code, you can see each other's sets.</p>
+        <div class="btnrow">
+          <button class="bigbtn b-red" id="fr-sharecode" type="button">Send my code</button>
+          <button class="bigbtn b-ghost" id="fr-copycode" type="button">Copy code</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Add a friend</h3>
+        <form id="fr-addform" class="partin" autocomplete="off">
+          <input id="fr-addcode" placeholder="7Q4-KM2" aria-label="Friend's code" autocapitalize="characters" spellcheck="false">
+          <button class="bigbtn b-red" style="width:auto;padding:0 20px">Add</button>
+        </form>
+        <div class="err" id="fr-adderr" hidden></div>
+      </div>
+      <h3 class="frhead">My friends</h3>
+      <ul class="list" id="fr-list"></ul>
+      <p class="note" id="fr-none">No friends yet. Add a friend's code to start.</p>
+    </div>
+
+    <h2 style="margin-top:22px">Invite friends</h2>
     <div class="card">
       <h3>Send the link</h3>
       <div class="linkbox" id="applink"></div>
@@ -336,15 +389,17 @@ label.f .sub{font-weight:400;color:var(--muted)}
   <div class="sheethead"><button class="xbtn" id="sclose" type="button">← Back</button><h2 id="stitle">Online vault</h2></div>
   <div class="sheetbody">
     <div class="card" style="margin:0" id="signinbox">
-      <h3>Sign in</h3>
-      <p>Sign in to save your sets online. Then your iPhone and iPad show the same sets, and nothing gets lost.</p>
+      <h3 id="sihead">Sign in</h3>
+      <p id="silede">Sign in to save your sets online. Then your iPhone and iPad show the same sets, and you can share sets with friends.</p>
       <form id="signinform" style="display:flex;flex-direction:column;gap:12px" autocomplete="on">
-        <label class="f">Email<input class="inp" id="semail" type="email" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
-        <label class="f">Password<input class="inp" id="spass" type="password" autocomplete="current-password"></label>
+        <label class="f">Email <span class="sub" id="semailsub" hidden>Use a grown-up's email</span><input class="inp" id="semail" type="email" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+        <label class="f">Password <span class="sub" id="spasssub" hidden>At least 6 letters or numbers</span><input class="inp" id="spass" type="password" autocomplete="current-password"></label>
+        <label class="f" id="snamewrap" hidden>Friend name <span class="sub">First name or nickname only. Friends see this.</span><input class="inp" id="sname" maxlength="20" autocomplete="off"></label>
         <div class="err" id="serr" hidden></div>
         <button class="bigbtn b-red" id="sgo" type="submit">Sign in</button>
       </form>
-      <p class="hint" style="margin:12px 0 0">No login? Ask Dad. Without signing in, Lego Vault still works and saves on this device only.</p>
+      <button class="bigbtn b-ghost" id="smode" type="button" style="margin-top:12px">New here? Make an account</button>
+      <p class="hint" style="margin:12px 0 0">Without an account, Lego Vault still works and saves on this device only.</p>
     </div>
     <div class="card" style="margin:0" id="signedbox" hidden>
       <h3>☁️ Your vault is online</h3>
@@ -355,6 +410,14 @@ label.f .sub{font-weight:400;color:var(--muted)}
       </div>
       <button class="bigbtn b-ghost" id="signout" type="button">Sign out</button>
     </div>
+  </div>
+</div>
+
+<div class="sheet" id="friendsheet" hidden role="dialog" aria-modal="true" aria-labelledby="fstitle">
+  <div class="sheethead"><button class="xbtn" id="fsclose" type="button">← Back</button><h2 id="fstitle">Friend's sets</h2></div>
+  <div class="sheetbody">
+    <p class="hint" id="fsnote" style="margin:0"></p>
+    <ul class="list" id="fslist"></ul>
   </div>
 </div>
 
@@ -480,8 +543,9 @@ $("#list").addEventListener("click",e=>{const b=e.target.closest(".row");if(b)op
 async function refresh(){if(cloudCol)return;const l=(await localAll())||[];if(cloudCol)return;sets=l;render()}
 
 /* ---------- Detail ---------- */
-function openDetail(id){
-  const s=sets.find(x=>x.id===id);if(!s)return;
+function openDetail(id,list,owner){
+  const s=(list||sets).find(x=>x.id===id);if(!s)return;
+  const ro=!!list;
   const st=STATUS[s.status]||STATUS.built;
   $("#dtitle").textContent=s.name;
   $("#dbody").innerHTML=`
@@ -495,9 +559,9 @@ function openDetail(id){
       <dt>Rating</dt><dd class="stars" style="font-size:20px">${starStr(s.stars)}</dd>
     </dl>
     <a class="bigbtn b-ghost" href="${bricksetUrl(s.number)}" target="_blank" rel="noopener">See all the set's info on Brickset</a>
-    <button class="bigbtn b-blue" id="dedit" type="button">Edit this set</button>`;
+    ${ro?`<p class="hint" style="margin:0;text-align:center">This is ${esc(owner||"your friend")}'s set. Only ${esc(owner||"they")} can change it.</p>`:`<button class="bigbtn b-blue" id="dedit" type="button">Edit this set</button>`}`;
   $("#detail").hidden=false;$("#detail").scrollTop=0;
-  $("#dedit").onclick=()=>{$("#detail").hidden=true;openForm(s)};
+  if(!ro)$("#dedit").onclick=()=>{$("#detail").hidden=true;openForm(s)};
 }
 $("#dclose").onclick=()=>$("#detail").hidden=true;
 
@@ -703,22 +767,174 @@ $("#movebtn").onclick=async()=>{
   }catch{toast("Moved "+n+". Check the internet and tap again for the rest.")}
   b.disabled=false;b.textContent="Move them to my online vault";updateMoveBox();
 };
+let signupMode=false,pendingName=null;
+function setMode(up){
+  signupMode=up;$("#serr").hidden=true;
+  $("#sihead").textContent=up?"Make an account":"Sign in";
+  $("#sgo").textContent=up?"Make my account":"Sign in";
+  $("#smode").textContent=up?"I already have an account":"New here? Make an account";
+  $("#snamewrap").hidden=!up;$("#semailsub").hidden=!up;$("#spasssub").hidden=!up;
+  $("#spass").setAttribute("autocomplete",up?"new-password":"current-password");
+}
+$("#smode").onclick=()=>setMode(!signupMode);
 $("#signinform").addEventListener("submit",async e=>{
   e.preventDefault();
   const er=$("#serr");er.hidden=true;
-  const email=$("#semail").value.trim(),pw=$("#spass").value;
+  const email=$("#semail").value.trim(),pw=$("#spass").value,nm=cleanName($("#sname").value);
   if(!email||!pw){er.textContent="Type the email and the password.";er.hidden=false;return}
-  const b=$("#sgo");b.disabled=true;b.textContent="Signing in…";
-  try{await fb.auth().signInWithEmailAndPassword(email,pw);$("#spass").value=""}
-  catch(x){
+  if(signupMode&&!nm){er.textContent="Pick a friend name.";er.hidden=false;return}
+  const b=$("#sgo");b.disabled=true;b.textContent=signupMode?"Making your account…":"Signing in…";
+  try{
+    if(signupMode){pendingName=nm;await fb.auth().createUserWithEmailAndPassword(email,pw);toast("Welcome to Lego Vault, "+nm+"!")}
+    else await fb.auth().signInWithEmailAndPassword(email,pw);
+    $("#spass").value="";$("#sname").value="";setMode(false);
+  }catch(x){
+    pendingName=null;
     const c=x&&x.code||"";
-    er.textContent=c.includes("network")?"No internet. Connect to Wi-Fi and try again.":c.includes("too-many")?"Too many tries. Wait a few minutes, then try again.":"That email or password isn't right. Check with Dad.";
+    er.textContent=c.includes("network")?"No internet. Connect to Wi-Fi and try again.":
+      c.includes("too-many")?"Too many tries. Wait a few minutes, then try again.":
+      c.includes("email-already-in-use")?"There's already an account with that email. Tap \"I already have an account\" to sign in.":
+      c.includes("weak-password")?"The password needs at least 6 letters or numbers.":
+      c.includes("invalid-email")?"That email doesn't look right. Check it and try again.":
+      c.includes("admin-restricted")||c.includes("operation-not-allowed")?"Making new accounts isn't turned on yet. Ask Dad.":
+      signupMode?"Couldn't make the account. Try again.":"That email or password isn't right. Check with Dad.";
     er.hidden=false;
-  }finally{b.disabled=false;b.textContent="Sign in"}
+  }finally{b.disabled=false;b.textContent=signupMode?"Make my account":"Sign in"}
 });
+
+/* ---------- Friends (online) ---------- */
+const CODE_ABC="23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+let me=null,profile=null,profUnsub=null,friendState={};
+const cleanName=s=>String(s||"").replace(/\s+/g," ").trim().slice(0,20);
+const normCode=s=>String(s||"").toUpperCase().replace(/[^0-9A-Z]/g,"");
+const showCode=c=>c?c.slice(0,3)+"-"+c.slice(3):"———";
+const userDoc=uid=>fb.firestore().collection("users").doc(uid);
+function newCode(){let s="";const a=new Uint32Array(6);crypto.getRandomValues(a);for(const n of a)s+=CODE_ABC[n%CODE_ABC.length];return s}
+async function ensureProfile(name){
+  const nm=cleanName(name);if(!me||!nm)return;
+  const ref=userDoc(me.uid);
+  let code=profile&&profile.code;
+  if(!code){
+    for(let i=0;i<5&&!code;i++){
+      const c=newCode();
+      try{await fb.firestore().collection("codes").doc(c).set({uid:me.uid,name:nm});code=c}catch{}
+    }
+    if(!code)throw new Error("code");
+  }else{await fb.firestore().collection("codes").doc(code).set({uid:me.uid,name:nm})}
+  await ref.set({name:nm,code},{merge:true});
+}
+function renderFriends(){
+  const signed=!!me;
+  $("#fr-signedout").hidden=signed;
+  $("#fr-noname").hidden=!signed||!!(profile&&profile.code);
+  $("#fr-ready").hidden=!signed||!(profile&&profile.code);
+  if(!signed||!profile||!profile.code)return;
+  $("#fr-code").textContent=showCode(profile.code);
+  const ids=Array.isArray(profile.friends)?profile.friends:[];
+  const names=profile.friendNames||{};
+  $("#fr-none").hidden=ids.length>0;
+  $("#fr-list").innerHTML=ids.map(id=>{
+    const nm=names[id]||"Friend",st=friendState[id];
+    const txt=st==="ok"?"Friends! Tap to see their sets":st==="wait"?`Waiting for ${nm} to add your code`:"Checking…";
+    return `<li class="frow"><span class="av" aria-hidden="true">${esc(nm.charAt(0).toUpperCase())}</span><span class="fi"><span class="fn">${esc(nm)}</span><span class="fs${st==="ok"?" ok":""}">${esc(txt)}</span><button class="rm" type="button" data-rm="${esc(id)}">Remove</button></span><button class="open" type="button" data-open="${esc(id)}" ${st==="ok"?"":"disabled"}>Sets</button></li>`;
+  }).join("");
+}
+async function checkFriends(){
+  if(!me||!profile)return;
+  const ids=Array.isArray(profile.friends)?profile.friends:[];
+  await Promise.all(ids.map(async id=>{
+    try{await userDoc(id).collection("sets").limit(1).get({source:"server"});friendState[id]="ok"}
+    catch{friendState[id]="wait"}
+  }));
+  renderFriends();
+}
+$("#fr-signin").onclick=()=>{setMode(false);openSync()};
+$("#fr-nameform").addEventListener("submit",async e=>{
+  e.preventDefault();const er=$("#fr-nameerr");er.hidden=true;
+  const nm=cleanName($("#fr-name").value);if(!nm){er.textContent="Type a name first.";er.hidden=false;return}
+  try{await ensureProfile(nm);toast("Hi "+nm+"! Here's your friend code.")}
+  catch{er.textContent="Couldn't save. Check the internet and try again.";er.hidden=false}
+});
+async function shareCode(){
+  const c=showCode(profile&&profile.code);
+  const text=`Let's be friends on Lego Vault! My friend code is ${c}. Open ${appUrl}, make an account, go to Friends and add my code.`;
+  if(navigator.share){try{await navigator.share({title:"My Lego Vault friend code",text})}catch{}}else copyCode();
+}
+async function copyCode(){
+  const c=showCode(profile&&profile.code);
+  try{await navigator.clipboard.writeText(c);toast("Code copied!")}
+  catch{const r=document.createRange();r.selectNodeContents($("#fr-code"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Code selected. Tap Copy.")}
+}
+$("#fr-sharecode").onclick=shareCode;$("#fr-copycode").onclick=copyCode;
+$("#fr-addform").addEventListener("submit",async e=>{
+  e.preventDefault();const er=$("#fr-adderr");er.hidden=true;
+  const c=normCode($("#fr-addcode").value);
+  if(c.length!==6){er.textContent="A friend code has 6 letters and numbers, like 7Q4-KM2.";er.hidden=false;return}
+  if(profile&&c===profile.code){er.textContent="That's your own code! Type your friend's code.";er.hidden=false;return}
+  try{
+    const snap=await fb.firestore().collection("codes").doc(c).get({source:"server"});
+    if(!snap.exists){er.textContent="No one has that code. Check it with your friend.";er.hidden=false;return}
+    const d=snap.data(),fv=firebase.firestore.FieldValue;
+    if((profile.friends||[]).includes(d.uid)){er.textContent=`${d.name} is already your friend.`;er.hidden=false;return}
+    await userDoc(me.uid).set({friends:fv.arrayUnion(d.uid),friendNames:{[d.uid]:cleanName(d.name)||"Friend"}},{merge:true});
+    $("#fr-addcode").value="";toast(`${cleanName(d.name)||"Friend"} added!`);
+    checkFriends();
+  }catch{er.textContent="Couldn't add. Check the internet and try again.";er.hidden=false}
+});
+$("#fr-list").addEventListener("click",async e=>{
+  const rm=e.target.closest("[data-rm]");
+  if(rm){
+    if(rm.dataset.arm!=="1"){rm.dataset.arm="1";rm.textContent="Tap again to remove";return}
+    const id=rm.dataset.rm,fv=firebase.firestore.FieldValue;
+    try{await userDoc(me.uid).update({friends:fv.arrayRemove(id),["friendNames."+id]:fv.delete()});toast("Friend removed")}
+    catch{rm.textContent="Couldn't remove. Try again."}
+    return;
+  }
+  const op=e.target.closest("[data-open]");if(op&&!op.disabled)openFriend(op.dataset.open);
+});
+let friendSets=[],friendName="";
+async function openFriend(id){
+  friendName=(profile.friendNames||{})[id]||"Friend";
+  $("#fstitle").textContent=friendName+"'s sets";$("#fsnote").textContent="Loading…";$("#fslist").innerHTML="";
+  $("#friendsheet").hidden=false;$("#friendsheet").scrollTop=0;
+  try{
+    const snap=await userDoc(id).collection("sets").get();
+    friendSets=snap.docs.map(d=>Object.assign({},d.data(),{id:d.id})).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    $("#fsnote").textContent=friendSets.length?`${friendSets.length} set${friendSets.length===1?"":"s"}. You can look, but only ${friendName} can change them.`:`${friendName} hasn't added any sets yet.`;
+    $("#fslist").innerHTML=friendSets.map(s=>{
+      const st=STATUS[s.status]||STATUS.built;
+      const th=s.photo?`<img class="thumb" src="${s.photo}" alt="">`:`<div class="thumb ph"><span>${esc(cleanNum(s.number))}</span></div>`;
+      const mine=sets.some(x=>cleanNum(x.number)===cleanNum(s.number));
+      return `<li><button class="row" data-id="${esc(s.id)}">${th}<span class="rinfo">
+        <span class="rname">${esc(s.name)}</span>
+        <span class="rmeta"><span class="num">${esc(cleanNum(s.number))}</span>${s.theme?`<span>${esc(s.theme)}</span>`:""}${mine?`<span class="status st-built">You have it too!</span>`:""}</span>
+        <span class="rmeta"><span class="status ${st[1]}">${st[0]}</span><span class="stars" aria-label="${+s.stars||0} stars">${starStr(s.stars)}</span></span>
+      </span></button></li>`}).join("");
+  }catch{
+    friendState[id]="wait";renderFriends();
+    $("#fsnote").textContent=`You can't see ${friendName}'s sets yet. ${friendName} needs to add your code too.`;
+  }
+}
+$("#fslist").addEventListener("click",e=>{const b=e.target.closest(".row");if(b)openDetail(b.dataset.id,friendSets,friendName)});
+$("#fsclose").onclick=()=>$("#friendsheet").hidden=true;
+document.querySelector('.tab[data-view="friends"]').addEventListener("click",()=>{if(me&&profile)checkFriends()});
+function watchProfile(u){
+  if(profUnsub){profUnsub();profUnsub=null}
+  me=u||null;profile=null;friendState={};
+  if(!u){renderFriends();return}
+  renderFriends();
+  profUnsub=userDoc(u.uid).onSnapshot(async snap=>{
+    const before=JSON.stringify(profile&&profile.friends||[]);
+    profile=snap.exists?snap.data():{};
+    if(!profile.code&&pendingName){const n=pendingName;pendingName=null;try{await ensureProfile(n)}catch{}}
+    renderFriends();
+    if(JSON.stringify(profile.friends||[])!==before)checkFriends();
+  },()=>{profile={};renderFriends()});
+}
 $("#signout").onclick=()=>{fb.auth().signOut();$("#syncsheet").hidden=true;toast("Signed out")};
 function setUser(u){
   if(unsub){unsub();unsub=null}
+  watchProfile(u);
   if(u){
     cloudCol=fb.firestore().collection("users").doc(u.uid).collection("sets");
     $("#syncbtn").textContent="☁️";$("#syncbtn").setAttribute("aria-label","Online vault: signed in");
